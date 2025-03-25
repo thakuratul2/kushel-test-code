@@ -33,39 +33,68 @@ class ProductController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(ProductRequest $request)
-    {
-        $product = Product::create($request->validated());
+{
+    // Check if product with the same name already exists
+    $existing_product = Product::where('name', $request->name)->first();
 
+    if ($existing_product) {
         return response()->json([
-            'message' => 'Product created successfully!',
-            'product' => $product
-        ], 200);
+            'message' => 'Product with this name already exists!',
+        ], 409);
     }
+
+   
+    $product = Product::create($request->validated());
+
+    return new ProductResource($product);
+}
 
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)  
-    {
-        //
-        return new ProductResource($product);
+    public function show($id)
+{
+    $product = Product::find($id);
+
+    if (!$product) {
+        return response()->json(['message' => 'Product not found'], 404);
     }
+
+    return new ProductResource($product);
+}
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(ProductRequest $request, Product $product)
+    public function update($id)
+
     {
-        $product->update($request->validated());
+
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $product->update(request()->all());
+
         return new ProductResource($product);
-    }
+}
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
+    public function destroy($id)
     {
+    
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
         $product->delete();
-        return response()->json(['message' => 'Product deleted successfully'], Response::HTTP_NO_CONTENT);
+
+        return response()->json('Product Deleted Successfully', 200);
     }
 }
